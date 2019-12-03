@@ -1,0 +1,152 @@
+{
+	"name": "revspec",
+	"displayName": "revspec",
+	"description": "Review tool to inspect source code in a structured way.",
+	"version": "0.0.1",
+	"engines": {
+		"vscode": "^1.40.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onCommand:revspec.setupsession"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "revspec-scope",
+					"title": "Revspec Scope",
+					"icon": "resources/scope.png"
+				}
+			]
+		},
+		"views": {
+			"revspec-scope": [
+				{
+					"id": "revspec-scope",
+					"name": "Revspec Scope"
+				}
+			]
+		},
+		"commands": [
+			{
+				"command": "revspec.setupsession",
+				"title": "Setup review session"
+			},
+			{
+				"command": "revspec.addfiletoscope",
+				"title": "Add currently viewed file to scope"
+			},
+			{
+				"command": "revspec.findings.create",
+				"title": "Create Marker"
+			},
+			{
+				"command": "revspec.findings.delete",
+				"title": "Delete",
+				"icon": {
+					"dark": "resources/close_inverse.svg",
+					"light": "resources/close.svg"
+				}
+			},
+			{
+				"command": "revspec.findings.deleteComment",
+				"title": "Delete comment"
+			},
+			{
+				"command": "revspec.scope.addFile",
+				"title": "Revspec: Add file to scope"
+			},
+			{
+				"command": "revspec.scope.removeFile",
+				"title": "Remove"
+			},
+			{
+				"command": "revspec.addAccepted",
+				"title": "Revspec: Accept selected code"
+			},
+			{
+				"command": "revspec.report.get",
+				"title": "Revspec: Get report"
+			}
+		],
+		"menus": {
+			"editor/context": [
+				{
+					"command": "revspec.addAccepted",
+					"group": "z_commands",
+					"when": "editorHasSelection"
+				}
+			],
+			"comments/comment/title": [
+				{
+					"command": "revspec.findings.deleteComment",
+					"group": "inline",
+					"when": "commentController == revspec-marker && comment == canDelete"
+				}
+			],
+			"comments/commentThread/context": [
+				{
+					"command": "revspec.findings.create",
+					"group": "inline"
+				}
+			],
+			"comments/commentThread/title": [
+				{
+					"command": "revspec.findings.delete",
+					"group": "navigation",
+					"when": "commentController == revspec-marker && !commentThreadIsEmpty"
+				}
+			],
+			"view/item/context": [
+				{
+					"command": "revspec.scope.removeFile",
+					"group": "inline"
+				}
+			]
+		},
+		"colors": [
+			{
+				"id": "revspec.scope.seen",
+				"description": "",
+				"defaults": {
+					"dark": "#00f81586",
+					"light": "#00db0096",
+					"highContrast": "#00ff00"
+				}
+			},
+			{
+				"id": "revspec.scope.accepted",
+				"description": "",
+				"defaults": {
+					"dark": "#38ff382c",
+					"light": "#00d63671",
+					"highContrast": "#00ff00a4"
+				}
+			}
+		]
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"postinstall": "node ./node_modules/vscode/bin/install",
+		"test": "npm run compile && node ./node_modules/vscode/bin/test"
+	},
+	"devDependencies": {
+		"@types/mkdirp": "^0.5.2",
+		"@types/mocha": "^2.2.42",
+		"@types/node": "^10.12.21",
+		"@types/rimraf": "^2.0.3",
+		"tslint": "^5.12.1",
+		"typescript": "^3.3.1",
+		"vscode": "^1.1.28"
+	},
+	"dependencies": {
+		"mkdirp": "^0.5.1",
+		"rimraf": "^3.0.0"
+	}
+}
