@@ -34,11 +34,7 @@
 		"commands": [
 			{
 				"command": "revspec.setupsession",
-				"title": "Setup review session"
-			},
-			{
-				"command": "revspec.addfiletoscope",
-				"title": "Add currently viewed file to scope"
+				"title": "Revspec: Setup review session"
 			},
 			{
 				"command": "revspec.findings.create",
