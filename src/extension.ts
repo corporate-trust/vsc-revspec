@@ -66,11 +66,11 @@ export function activate(context: vscode.ExtensionContext) {
 	vscode.window.registerTreeDataProvider('revspec-scope', scopeProvider);
 	
 	addFileToScope = vscode.commands.registerCommand('revspec.scope.addFile', () => {
-		let document = vscode.window.activeTextEditor.document;
-		if (!document) {
+		let editor = vscode.window.activeTextEditor;
+		if (!editor || !editor.document) {
 			return;
 		}
-		scopeProvider.addTreeItem(document);
+		scopeProvider.addTreeItem(editor.document);
 	});
 	context.subscriptions.push(addFileToScope);
 
@@ -115,7 +115,7 @@ export function activate(context: vscode.ExtensionContext) {
 	let newFinding = vscode.commands.registerTextEditorCommand('revspec.findings.new', () => createFinding());
 	context.subscriptions.push(newFinding);
 
-	let deleteFinding = vscode.commands.registerTextEditorCommand('revspec.findings.delete', () => deleteFinding());
+	let deleteFinding = vscode.commands.registerTextEditorCommand('revspec.findings.delete', () => removeFinding());
 	context.subscriptions.push(deleteFinding);
 
 	// Report
@@ -196,16 +196,30 @@ export function updateStatusBarItemAccepted() {
 	currentAcceptedProgress.show();
 }
 
-function deleteFinding() {
+function removeFinding() {
 	let id = Promise.resolve(deleteFindingDialog()).then((value) => {
-		scopeProvider.deleteFindingByID(id);
+		scopeProvider.deleteFindingByID(value);
 	});
+	scopeProvider.updateDecorations();
 }
 
 async function deleteFindingDialog() {
-	const id = await vscode.window.showInputBox({
-		prompt: "Finding ID to delete"
+	let id_s = await vscode.window.showInputBox({
+		prompt: "Finding ID to delete",
+		validateInput: value => {
+			if (Number.isInteger(Number(value))) {
+				let id = Number(value);
+				if (scopeProvider.getFindingByID(id) !== null) {
+					return null;
+				} else {
+					return `Finding with ID ${id} does not exist!`;
+				}
+			} else {
+				return 'Numbers only!';
+			}
+		}
 	});
+	let id = Number(id_s);
 	return id;
 }
 

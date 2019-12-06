@@ -116,6 +116,17 @@ export class ScopeProvider implements vscode.TreeDataProvider<ScopeFile> {
         return this.scope.reduce(findingsReducer, 0);
     }
 
+    getFindingByID(id: number) {
+        let x = this.scope.filter(sf => (
+            sf.getFindingByID(id) !== null
+        ));
+        if (x.length > 0) {
+            return x[0];
+        } else {
+            return null;
+        }
+    }
+
     deleteFindingByID(id: number) {
         this.scope.forEach((sf) => {
             sf.deleteFindingByID(id);
@@ -219,6 +230,15 @@ export class ScopeFile extends vscode.TreeItem {
         );
         this.findings.push(f);
         scopeProvider.updateDecorations();
+    }
+
+    getFindingByID(id: number) {
+        let f =  this.findings.filter(f => f.id === id);
+        if (f.length > 0) {
+            return f[0];
+        } else {
+            return null;
+        }
     }
 
     deleteFindingByID(id: number) {
