@@ -21,8 +21,8 @@ export class ReportProvider implements vscode.TextDocumentContentProvider {
         });
 
         // Findings
-        text += "---\n\n";
-        text += "\n\n## Findings\n\n";
+        text += "\n---\n\n\n";
+        text += "## Findings\n\n";
         text += `* ${scopeProvider.getFindingsCount()} problems have been found\n\n`;
         scopeProvider.scope.forEach((sf: ScopeFile) => {
             sf.findings.sort((a: Finding, b: Finding) => {
