@@ -45,12 +45,13 @@
 				"title": "Create Marker"
 			},
 			{
+				"command": "revspec.findings.new",
+				"title": "Revspec: New finding",
+				"when": "editorHasSelection"
+			},
+			{
 				"command": "revspec.findings.delete",
-				"title": "Delete",
-				"icon": {
-					"dark": "resources/close_inverse.svg",
-					"light": "resources/close.svg"
-				}
+				"title": "Revspec: Delete finding with ID ..."
 			},
 			{
 				"command": "revspec.findings.deleteComment",
@@ -77,6 +78,11 @@
 			"editor/context": [
 				{
 					"command": "revspec.addAccepted",
+					"group": "z_commands",
+					"when": "editorHasSelection"
+				},
+				{
+					"command": "revspec.findings.new",
 					"group": "z_commands",
 					"when": "editorHasSelection"
 				}
@@ -113,9 +119,9 @@
 				"id": "revspec.scope.seen",
 				"description": "",
 				"defaults": {
-					"dark": "#00f81586",
-					"light": "#00db0096",
-					"highContrast": "#00ff00"
+					"dark": "#ffe02ec2",
+					"light": "#f8d300c0",
+					"highContrast": "#ffff00"
 				}
 			},
 			{
@@ -125,6 +131,15 @@
 					"dark": "#38ff382c",
 					"light": "#00d63671",
 					"highContrast": "#00ff00a4"
+				}
+			},
+			{
+				"id": "revspec.finding",
+				"description": "",
+				"defaults": {
+					"dark": "#993632be",
+					"light": "#b30000",
+					"highContrast": "#ff0000"
 				}
 			}
 		]
