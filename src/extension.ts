@@ -1,3 +1,8 @@
+// TODO: Setup session -> all documents get readonly
+
+// TODO: Open preview instead of markdown --> Requesting markdown support on installation?
+
+
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
@@ -5,29 +10,36 @@ import { ScopeProvider, ScopeFile } from './scopeProvider';
 import { ReportProvider } from './report';
 import { REPL_MODE_SLOPPY } from 'repl';
 
-let markerId = 1;
+let markerId = 0;
 let currentSeenProgress: vscode.StatusBarItem;
 let currentAcceptedProgress: vscode.StatusBarItem;
-let reviewer: String;
+export let reviewer: string;
+let findingsHoverProvider: vscode.HoverProvider;
 
 export let scopeProvider: ScopeProvider;
 
-export class Finding implements vscode.Comment {
+export class Finding {
 	id: number;
-	label: string | undefined;
 	constructor(
-		public body: string | vscode.MarkdownString,
-		public mode: vscode.CommentMode,
-		public author: vscode.CommentAuthorInformation,
-		public parent?: vscode.CommentThread,
-		public contextValue?: string
+		public title: string | undefined,
+		public body: string | undefined,
+		public severity: string | undefined,
+		public likelihood: string | undefined,
+		public author: string | undefined,
+		public range: vscode.Range
 	) {
 		this.id = ++markerId;
 	}
 }
 
-function setup_session() {
+async function setup_session() {
 	vscode.window.showInformationMessage('Setup review session!');
+	const reviewer_name = await vscode.window.showInputBox({
+		prompt: "Reviewers name"
+	});
+	if (reviewer_name) {
+		reviewer = reviewer_name;
+	}
 }
 
 function add_file_to_scope() {
@@ -48,45 +60,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(setupSession);
 	context.subscriptions.push(addFileToScope);
-
-	// Findings are made by comments
-	const commentController = vscode.comments.createCommentController('revspec-marker', 'Marker for revspec extension');
-	context.subscriptions.push(commentController);
-
-	commentController.commentingRangeProvider = {
-		provideCommentingRanges: (document: vscode.TextDocument, token: vscode.CancellationToken) => {
-			let lineCount = document.lineCount;
-			return [new vscode.Range(0, 0, lineCount - 1, 0)];
-		}
-	};
-
-	//commentController.reactionHandler = commentReactionHandler;
-
-	context.subscriptions.push(vscode.commands.registerCommand('revspec.findings.create', (reply: vscode.CommentReply) => {
-		let editor = vscode.window.activeTextEditor;
-		if (editor) {
-			createFinding(reply, editor);
-		}
-	}));
-
-	context.subscriptions.push(vscode.commands.registerCommand('revspec.findings.delete', (thread: vscode.CommentThread) => {
-		thread.dispose();
-	}));
-
-	context.subscriptions.push(vscode.commands.registerCommand('revspec.findings.deleteComment', (comment: Finding) => {
-		let thread = comment.parent;
-		if (!thread) {
-			return;
-		}
-		thread.comments = thread.comments.filter(cmt => (cmt as Finding).id !== comment.id);
-		if (thread.comments.length === 0) {
-			thread.dispose();
-		}
-	}));
-
-	/*context.subscriptions.push(vscode.commands.registerCommand('revspec.saveMarker', (comment: MarkerComment) => {
-		return;
-	}));*/
 
 	// Scope container
 	scopeProvider = new ScopeProvider();
@@ -138,17 +111,43 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 	scopeProvider.updateDecorations();
 
+	// New findings
+	let newFinding = vscode.commands.registerTextEditorCommand('revspec.findings.new', () => createFinding());
+	context.subscriptions.push(newFinding);
+
+	let deleteFinding = vscode.commands.registerTextEditorCommand('revspec.findings.delete', () => deleteFinding());
+	context.subscriptions.push(deleteFinding);
+
 	// Report
 	const reportScheme = 'report';
 	const report = new ReportProvider;
 	context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(reportScheme, report));
 
 	let getReport = vscode.commands.registerCommand('revspec.report.get', async () => {
-		let uri = vscode.Uri.parse('report:' + 'r');
+		let uri = vscode.Uri.parse('report:' + 'report.md');
 		let doc = await vscode.workspace.openTextDocument(uri);
 		vscode.window.showTextDocument(doc, { preview: true });
 	});
 	context.subscriptions.push(getReport);
+
+	findingsHoverProvider = {
+		provideHover(doc, pos): vscode.ProviderResult<vscode.Hover> {
+			let sf = scopeProvider.getScopeFileByUri(doc.uri);
+			if (sf) {
+				for (var i = 0; i < sf.findings.length; i++) {
+					let s = sf.findings[i];
+					if (s.range.contains(pos)) {
+						if (s.body !== undefined) {
+							let m = new vscode.MarkdownString(`### ${s.id} - ${s.title}\n---\n* Likelihood: ${s.likelihood}\n* Severity: ${s.severity}\n---\n${s.body}`);
+							return new vscode.Hover(m, s.range);
+						}
+					}
+				}
+			}
+			return;
+		}
+	};
+	context.subscriptions.push(vscode.languages.registerHoverProvider({ scheme: 'file', pattern: '**/*' }, findingsHoverProvider));
 }
 
 export function updateStatusBarItemProgress() {
@@ -197,22 +196,68 @@ export function updateStatusBarItemAccepted() {
 	currentAcceptedProgress.show();
 }
 
-
-function createFinding(reply: vscode.CommentReply, editor: vscode.TextEditor) {
-	let thread = reply.thread;
-	
-	let newComment = new Finding(reply.text, vscode.CommentMode.Preview, { name: 'vscode' }, thread, thread.comments.length ? 'canDelete' : undefined);
-	if (thread.contextValue === 'draft') {
-		newComment.label = 'pending';
-	}
-	thread.comments = [...thread.comments, newComment];
-	let sf = scopeProvider.getScopeFileByUri(editor.document.uri);
-	sf.addFinding(newComment);
+function deleteFinding() {
+	let id = Promise.resolve(deleteFindingDialog()).then((value) => {
+		scopeProvider.deleteFindingByID(id);
+	});
 }
 
-/*function commentReactionHandler(comment: vscode.Comment, reaction: vscode.CommentReaction): Promise<void> {
-	return new Promise();
-}*/
+async function deleteFindingDialog() {
+	const id = await vscode.window.showInputBox({
+		prompt: "Finding ID to delete"
+	});
+	return id;
+}
+
+function createFinding() {
+	let editor = vscode.window.activeTextEditor;
+	if (editor !== undefined) {
+		let sf = scopeProvider.getScopeFileByUri(editor.document.uri);
+		if (sf !== null) {
+			let range = editor.selection;
+			if (!range.isEmpty) {
+				Promise.resolve(newFindingDialog(editor.document, range)).then((value) => {
+					sf.addFinding(value);
+					vscode.window.showInformationMessage(`Created finding with ID ${value.id}`);
+				});
+			} else {
+				vscode.window.showErrorMessage("First select code containing the bug to create a new finding!");
+			}
+		} else {
+			vscode.window.showErrorMessage("This file is not in scope!");
+		}
+	}
+	scopeProvider.updateDecorations();
+}
+// FIXME: Findings erzeugung abbrechbar machen
+// FIXME: Ordentliches multipart input verwenden
+export async function newFindingDialog(editor: vscode.TextDocument, range: vscode.Range) {
+	const title = await vscode.window.showInputBox({
+		prompt: "Finding title",
+		ignoreFocusOut: true,
+		placeHolder: "For example: Buffer overflow at ..."
+	});
+	const description = await vscode.window.showInputBox({
+		prompt: "Description",
+		ignoreFocusOut: true
+	});
+	const likelihood = await vscode.window.showInputBox({
+		prompt: "Liklihood",
+		ignoreFocusOut: true,
+		validateInput: (value) => {
+			return (Number.isInteger(Number(value))) ? null : 'Numbers only!';
+		}
+	});
+	const severity = await vscode.window.showInputBox({
+		prompt: "Severity",
+		ignoreFocusOut: true,
+		validateInput: (value) => {
+			return (Number.isInteger(Number(value))) ? null : 'Numbers only!';
+		}
+	});
+	let f = new Finding(title, description, severity, likelihood, reviewer, range);
+	return f;
+}
 
 // this method is called when your extension is deactivated
 export function deactivate() { }

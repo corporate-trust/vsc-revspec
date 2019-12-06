@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { updateStatusBarItemProgress, updateStatusBarItemAccepted, Finding} from './extension';
+import { updateStatusBarItemProgress, updateStatusBarItemAccepted, Finding, reviewer, scopeProvider } from './extension';
 
 const seenDecorationType = vscode.window.createTextEditorDecorationType({
     overviewRulerColor: {id: 'revspec.scope.seen'},
@@ -10,6 +10,15 @@ const acceptedDecoratorType = vscode.window.createTextEditorDecorationType({
     overviewRulerColor: {id: 'revspec.scope.accepted'},
     backgroundColor: {id: 'revspec.scope.accepted'}
 });
+
+const findingDecoratorType = vscode.window.createTextEditorDecorationType({
+    border: "2px",
+    borderColor: {id: "revspec.finding"},
+    borderStyle: "none none solid none"
+});
+
+let sumReducer = (accumulator: number, currentValue: vscode.Range) => accumulator + (currentValue.end.line - currentValue.start.line);
+let findingsReducer = (accumulator: number, currentValue: ScopeFile) => accumulator + currentValue.findings.length;
 
 export class ScopeProvider implements vscode.TreeDataProvider<ScopeFile> {
     private _onDidChangeTreeData: vscode.EventEmitter<ScopeFile | undefined> = new vscode.EventEmitter<ScopeFile | undefined>();
@@ -36,11 +45,15 @@ export class ScopeProvider implements vscode.TreeDataProvider<ScopeFile> {
 
     addTreeItem(document: vscode.TextDocument) {
         let label = document.uri;
-        this.scope.push(new ScopeFile(label, 0, document, [], [], []));
-        this.refresh();
-        updateStatusBarItemAccepted();
-        updateStatusBarItemProgress();
-        this.updateDecorations();
+        if (this.getScopeFileByUri(document.uri) === null) {
+            this.scope.push(new ScopeFile(label, 0, document, [], [], []));
+            this.refresh();
+            updateStatusBarItemAccepted();
+            updateStatusBarItemProgress();
+            this.updateDecorations();
+        } else {
+            vscode.window.showErrorMessage("This file is already in scope");
+        }
     }
 
     getTreeItem(element: ScopeFile): vscode.TreeItem {
@@ -99,12 +112,23 @@ export class ScopeProvider implements vscode.TreeDataProvider<ScopeFile> {
         updateStatusBarItemAccepted();
     }
 
+    getFindingsCount() {
+        return this.scope.reduce(findingsReducer, 0);
+    }
+
+    deleteFindingByID(id: number) {
+        this.scope.forEach((sf) => {
+            sf.deleteFindingByID(id);
+        });
+    }
+
     updateDecorations() {
         vscode.window.visibleTextEditors.forEach((editor) => {
             let sf = this.getScopeFileByUri(editor.document.uri);
             if (sf) {
                 editor.setDecorations(seenDecorationType, sf.seen);
                 editor.setDecorations(acceptedDecoratorType, sf.accepted);
+                editor.setDecorations(findingDecoratorType, sf.findings);
             }
         });
     }
@@ -128,8 +152,6 @@ export class ScopeFile extends vscode.TreeItem {
         };
     }
 
-    private reducer = (accumulator: number, currentValue: vscode.Range) => accumulator + (currentValue.end.line - currentValue.start.line);
-
     refreshSeen() {
         if (this.seen) {
             this.seen.sort((a: vscode.Range, b: vscode.Range) => {
@@ -149,14 +171,14 @@ export class ScopeFile extends vscode.TreeItem {
     getSeenStats() {
         return {
             lines: this.document.lineCount,
-            seenLines: this.seen.reduce(this.reducer, 0)
+            seenLines: this.seen.reduce(sumReducer, 0)
         };
     }
 
     getAcceptedStats() {
         return {
             lines: this.document.lineCount,
-            acceptedLines: this.accepted.reduce(this.reducer, 0)
+            acceptedLines: this.accepted.reduce(sumReducer, 0)
         };
     }
     
@@ -191,7 +213,15 @@ export class ScopeFile extends vscode.TreeItem {
         }
     }
 
-    addFinding(comment: Finding) {
-        this.findings.push(comment);
+    addFinding(f: Finding) {
+        this.accepted = this.accepted.filter(a => 
+            (a.intersection(f.range) === undefined) && (!(a.contains(f.range)))
+        );
+        this.findings.push(f);
+        scopeProvider.updateDecorations();
+    }
+
+    deleteFindingByID(id: number) {
+        this.findings = this.findings.filter(f => f.id !== id);
     }
 }
