@@ -1,5 +1,8 @@
 # revspec README
 
+Extension svg:
+<div>Icons made by <a href="https://www.flaticon.com/authors/kiranshastry" title="Kiranshastry">Kiranshastry</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
+
 This is the README for your extension "revspec". After writing up a brief description, we recommend including the following sections.
 
 ## Features
