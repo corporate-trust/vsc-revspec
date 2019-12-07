@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import fs from 'fs';
 import { updateStatusBarItemProgress, updateStatusBarItemAccepted, Finding, reviewer, scopeProvider } from './extension';
 
 const seenDecorationType = vscode.window.createTextEditorDecorationType({
@@ -43,6 +44,24 @@ export class ScopeProvider implements vscode.TreeDataProvider<ScopeFile> {
         this._onDidChangeTreeData.fire();
     }
 
+    async addToScope(operationId: string, entry: vscode.Uri[]) {
+        entry.forEach(async (e) => {
+            let s = await vscode.workspace.fs.stat(e);
+            if (s.type === vscode.FileType.File) {
+                let d = await vscode.workspace.openTextDocument(e);
+                this.addTreeItem(d);
+            } else if (s.type === vscode.FileType.Directory) {
+                let p = vscode.workspace.asRelativePath(e.fsPath) + "/*";
+                let uris = await vscode.workspace.findFiles(p);
+                uris.forEach(async (u) => {
+                    let d = await vscode.workspace.openTextDocument(u);
+                    this.addTreeItem(d);
+                });
+            }
+        });
+        this.refresh();
+    }
+
     addTreeItem(document: vscode.TextDocument) {
         let label = document.uri;
         if (this.getScopeFileByUri(document.uri) === null) {
@@ -51,6 +70,7 @@ export class ScopeProvider implements vscode.TreeDataProvider<ScopeFile> {
             updateStatusBarItemAccepted();
             updateStatusBarItemProgress();
             this.updateDecorations();
+            vscode.window.showInformationMessage(`Added file to scope`);
         } else {
             vscode.window.showErrorMessage("This file is already in scope");
         }

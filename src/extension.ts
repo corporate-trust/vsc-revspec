@@ -79,6 +79,10 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 	context.subscriptions.push(removeFileCommand);
 
+	let addToScope = vscode.commands.registerCommand('revspec.scope.add', async (operationId: string, entry: vscode.Uri[]) => scopeProvider.addToScope(operationId, entry));
+	context.subscriptions.push(addToScope);
+
+	// Accepted
 	let addAccepted = vscode.commands.registerCommand('revspec.addAccepted', () => {
 		let e = vscode.window.activeTextEditor;
 		if (e !== undefined) {

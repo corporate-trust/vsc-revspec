@@ -37,6 +37,18 @@
 				"title": "Revspec: Setup review session"
 			},
 			{
+				"command": "revspec.scope.addFile",
+				"title": "Revspec: Add file to scope"
+			},
+			{
+				"command": "revspec.scope.removeFile",
+				"title": "Remove"
+			},
+			{
+				"command": "revspec.scope.add",
+				"title": "Revspec: Add to scope"
+			},
+			{
 				"command": "revspec.findings.create",
 				"title": "Create Marker"
 			},
@@ -52,14 +64,6 @@
 			{
 				"command": "revspec.findings.deleteComment",
 				"title": "Delete comment"
-			},
-			{
-				"command": "revspec.scope.addFile",
-				"title": "Revspec: Add file to scope"
-			},
-			{
-				"command": "revspec.scope.removeFile",
-				"title": "Remove"
 			},
 			{
 				"command": "revspec.addAccepted",
@@ -81,6 +85,11 @@
 					"command": "revspec.findings.new",
 					"group": "z_commands",
 					"when": "editorHasSelection"
+				}
+			],
+			"explorer/context": [
+				{
+					"command": "revspec.scope.addFolder"
 				}
 			],
 			"comments/comment/title": [
