@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import fs from 'fs';
 import { updateStatusBarItemProgress, updateStatusBarItemAccepted, Finding, reviewer, scopeProvider } from './extension';
 
 const seenDecorationType = vscode.window.createTextEditorDecorationType({

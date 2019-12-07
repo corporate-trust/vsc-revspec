@@ -1,7 +1,5 @@
 // TODO: Setup session -> all documents get readonly
-
 // TODO: Open preview instead of markdown --> Requesting markdown support on installation?
-
 
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
@@ -235,7 +233,9 @@ function createFinding() {
 			let range = editor.selection;
 			if (!range.isEmpty) {
 				Promise.resolve(newFindingDialog(editor.document, range)).then((value) => {
-					sf.addFinding(value);
+					if (sf) {
+						sf.addFinding(value);
+					}
 					vscode.window.showInformationMessage(`Created finding with ID ${value.id}`);
 				});
 			} else {
