@@ -54,16 +54,13 @@ export function activate(context: vscode.ExtensionContext) {
 	console.log('Congratulations, your extension "revspec" is now active!');
 
 	let setupSession = vscode.commands.registerCommand('revspec.setupsession', setup_session);
-	let addFileToScope = vscode.commands.registerCommand('revspec.addfiletoscope', add_file_to_scope);
-
 	context.subscriptions.push(setupSession);
-	context.subscriptions.push(addFileToScope);
 
 	// Scope container
 	scopeProvider = new ScopeProvider();
 	vscode.window.registerTreeDataProvider('revspec-scope', scopeProvider);
 	
-	addFileToScope = vscode.commands.registerCommand('revspec.scope.addFile', () => {
+	let addFileToScope = vscode.commands.registerCommand('revspec.scope.addFile', () => {
 		let editor = vscode.window.activeTextEditor;
 		if (!editor || !editor.document) {
 			return;

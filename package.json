@@ -3,7 +3,7 @@
 	"displayName": "revspec",
 	"description": "Review tool to inspect source code in a structured way.",
 	"version": "0.0.1",
-	"license": "SEE LICENSE IN <filename>",
+	"license": "SEE LICENSE IN LICENSE",
 	"icon": "resources/extension.png",
 	"engines": {
 		"vscode": "^1.40.0"
@@ -91,7 +91,7 @@
 			],
 			"explorer/context": [
 				{
-					"command": "revspec.scope.addFolder"
+					"command": "revspec.scope.add"
 				}
 			],
 			"comments/comment/title": [
