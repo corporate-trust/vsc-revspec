@@ -1,6 +1,6 @@
 {
-	"name": "revspec",
-	"displayName": "revspec",
+	"name": "vsc-revspec",
+	"displayName": "Review inSpector",
 	"description": "Review tool to inspect source code in a structured way.",
 	"version": "0.1.0",
 	"license": "SEE LICENSE IN LICENSE",
