@@ -6,4 +6,9 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
-- Initial release
+## [0.1] - 2020-01-11
+
+* Add/Remove files to scope
+* Automatic log of seen and accepted code
+* Add/Delete findings, containing
+* Automatic report generation, containing
