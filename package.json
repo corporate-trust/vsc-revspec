@@ -2,9 +2,16 @@
 	"name": "revspec",
 	"displayName": "revspec",
 	"description": "Review tool to inspect source code in a structured way.",
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"license": "SEE LICENSE IN LICENSE",
 	"icon": "resources/extension.png",
+	"repository": {
+		"type": "git",
+		"url": "https://https://github.com/corporate-trust/vsc-revspec"
+	},
+	"bugs": {
+		"url": "https://https://github.com/corporate-trust/vsc-revspec/issues"
+	},
 	"engines": {
 		"vscode": "^1.40.0"
 	},
