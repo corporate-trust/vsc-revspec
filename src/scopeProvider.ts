@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { updateStatusBarItemProgress, updateStatusBarItemAccepted, Finding, reviewer, scopeProvider } from './extension';
+import { updateStatusBarItemProgress, updateStatusBarItemAccepted, Finding, scopeProvider } from './extension';
 
 const seenDecorationType = vscode.window.createTextEditorDecorationType({
     overviewRulerColor: {id: 'revspec.scope.seen'},
@@ -25,9 +25,24 @@ export class ScopeProvider implements vscode.TreeDataProvider<ScopeFile> {
     readonly onDidChangeTreeData: vscode.Event<ScopeFile | undefined> = this._onDidChangeTreeData.event;
 
     scope: ScopeFile[];
+    // Persistent store for scope objects
+    // List of scope file uris in key "__scopeObjects__"
+    scopeStore: vscode.Memento;
 
-    constructor () {
+    constructor (public store: vscode.Memento) {
+        this.scopeStore = store;
         this.scope = [];
+    }
+
+    // Restore state of extension
+    init(): void {
+        let scopeFiles: string[] = this.scopeStore.get("__scopeFiles__", []);
+        scopeFiles.forEach((uri) => {
+            let sf: ScopeFile|undefined = this.scopeStore.get(uri);
+            if (sf !== undefined) {
+                this.scope.push(sf);
+            }
+        });
     }
 
     refresh(): void {
@@ -39,6 +54,16 @@ export class ScopeProvider implements vscode.TreeDataProvider<ScopeFile> {
                 return 1;
             }
             return 0;
+        });
+        // Sync persistent storage
+        this.scope.forEach((sf) => {
+            let uri = sf.resourceUri.toString();
+            let x = this.scopeStore.get(uri);
+            if (x === undefined) {
+                let scopeFiles: string[] = this.scopeStore.get("__scopeFiles__", []);
+                scopeFiles.push(uri);
+            }
+            this.scopeStore.update(uri, sf);
         });
         this._onDidChangeTreeData.fire();
     }

@@ -57,7 +57,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(setupSession);
 
 	// Scope container
-	scopeProvider = new ScopeProvider();
+	scopeProvider = new ScopeProvider(context.workspaceState);
 	vscode.window.registerTreeDataProvider('revspec-scope', scopeProvider);
 	
 	let addFileToScope = vscode.commands.registerCommand('revspec.scope.addFile', () => {
