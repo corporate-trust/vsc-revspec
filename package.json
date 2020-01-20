@@ -2,16 +2,16 @@
 	"name": "vsc-revspec",
 	"displayName": "Review inSpector",
 	"description": "Review tool to inspect source code in a structured way.",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"license": "SEE LICENSE IN LICENSE",
 	"icon": "resources/extension.png",
 	"repository": {
 		"type": "git",
-		"url": "https://https://github.com/corporate-trust/vsc-revspec"
+		"url": "https://github.com/corporate-trust/vsc-revspec"
 	},
 	"publisher": "corporate-trust",
 	"bugs": {
-		"url": "https://https://github.com/corporate-trust/vsc-revspec/issues"
+		"url": "https://github.com/corporate-trust/vsc-revspec/issues"
 	},
 	"engines": {
 		"vscode": "^1.40.0"
