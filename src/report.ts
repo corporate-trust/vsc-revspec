@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { ScopeFile } from './scopeProvider';
+import { ScopeItem } from './scopeProvider';
 import { scopeProvider, Finding } from './extension';
 
 export class ReportProvider implements vscode.TextDocumentContentProvider {
@@ -12,7 +12,7 @@ export class ReportProvider implements vscode.TextDocumentContentProvider {
         let text = "# Report\n\n";
         text += "## Scope\n\n";
         text += "Files in scope: " + scopeProvider.scope.length + "\n";
-        scopeProvider.scope.forEach((sf: ScopeFile) => {
+        scopeProvider.scope.forEach((sf: ScopeItem) => {
             let uri = vscode.workspace.asRelativePath(sf.resourceUri);
             let ps = Math.ceil((sf.getSeenStats().seenLines / sf.getSeenStats().lines) * 100);
             let pa = Math.ceil((sf.getAcceptedStats().acceptedLines / sf.getAcceptedStats().lines) * 100);
@@ -24,7 +24,7 @@ export class ReportProvider implements vscode.TextDocumentContentProvider {
         text += "\n---\n\n\n";
         text += "## Findings\n\n";
         text += `* ${scopeProvider.getFindingsCount()} problems have been found\n\n`;
-        scopeProvider.scope.forEach((sf: ScopeFile) => {
+        scopeProvider.scope.forEach((sf: ScopeItem) => {
             sf.findings.sort((a: Finding, b: Finding) => {
                 let astat = Number(a.likelihood) * Number(a.severity);
                 let bstat = Number(b.likelihood) * Number(a.severity);

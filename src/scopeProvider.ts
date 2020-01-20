@@ -19,9 +19,9 @@ const findingDecoratorType = vscode.window.createTextEditorDecorationType({
 });
 
 let sumReducer = (accumulator: number, currentValue: vscode.Range) => accumulator + (currentValue.end.line - currentValue.start.line);
-let findingsReducer = (accumulator: number, currentValue: ScopeFile) => accumulator + currentValue.findings.length;
+let findingsReducer = (accumulator: number, currentValue: ScopeItem) => accumulator + currentValue.findings.length;
 
-export class ScopeFile extends vscode.TreeItem {
+export class ScopeItem extends vscode.TreeItem {
     constructor(
         public readonly resourceUri: vscode.Uri,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState,
@@ -121,11 +121,11 @@ export class ScopeFile extends vscode.TreeItem {
     }
 }
 
-export class ScopeProvider implements vscode.TreeDataProvider<ScopeFile> {
-    private _onDidChangeTreeData: vscode.EventEmitter<ScopeFile | undefined> = new vscode.EventEmitter<ScopeFile | undefined>();
-    readonly onDidChangeTreeData: vscode.Event<ScopeFile | undefined> = this._onDidChangeTreeData.event;
+export class ScopeProvider implements vscode.TreeDataProvider<ScopeItem> {
+    private _onDidChangeTreeData: vscode.EventEmitter<ScopeItem | undefined> = new vscode.EventEmitter<ScopeItem | undefined>();
+    readonly onDidChangeTreeData: vscode.Event<ScopeItem | undefined> = this._onDidChangeTreeData.event;
 
-    scope: ScopeFile[];
+    scope: ScopeItem[];
     // Persistent store for scope objects
     // List of scope file uris in key "__scopeObjects__"
     scopeStore: vscode.Memento;
@@ -139,9 +139,9 @@ export class ScopeProvider implements vscode.TreeDataProvider<ScopeFile> {
     init(): void {
         let scopeFiles: string[] = this.scopeStore.get("__scopeFiles__", []);
         scopeFiles.forEach((uri) => {
-            let sf: ScopeFile|undefined = this.scopeStore.get(uri);
+            let sf: ScopeItem|undefined = this.scopeStore.get(uri);
             if (sf !== undefined) {
-                var h = new ScopeFile(sf.resourceUri, sf.collapsibleState, 
+                var h = new ScopeItem(sf.resourceUri, sf.collapsibleState, 
                     sf.document, sf.seen, sf.accepted, sf.findings);
                 this.scope.push(h);
             }
@@ -196,7 +196,7 @@ export class ScopeProvider implements vscode.TreeDataProvider<ScopeFile> {
     addTreeItem(document: vscode.TextDocument) {
         let label = document.uri;
         if (this.getScopeFileByUri(document.uri) === null) {
-            this.scope.push(new ScopeFile(label, 0, document, [], [], []));
+            this.scope.push(new ScopeItem(label, 0, document, [], [], []));
             this.refresh();
             updateStatusBarItemAccepted();
             updateStatusBarItemProgress();
@@ -207,15 +207,15 @@ export class ScopeProvider implements vscode.TreeDataProvider<ScopeFile> {
         }
     }
 
-    getTreeItem(element: ScopeFile): vscode.TreeItem {
+    getTreeItem(element: ScopeItem): vscode.TreeItem {
         return element;
     }
 
-    getChildren(element?: ScopeFile): Thenable<ScopeFile[]> {
+    getChildren(element?: ScopeItem): Thenable<ScopeItem[]> {
         return Promise.resolve(this.scope);
     }
 
-    removeItemFromScope(element: ScopeFile) {
+    removeItemFromScope(element: ScopeItem) {
         const index = this.scope.indexOf(element, 0);
         if (index > -1) {
             this.scope.splice(index);

@@ -4,7 +4,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { ScopeProvider, ScopeFile } from './scopeProvider';
+import { ScopeProvider, ScopeItem } from './scopeProvider';
 import { ReportProvider } from './report';
 import { REPL_MODE_SLOPPY } from 'repl';
 
@@ -68,7 +68,7 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 	context.subscriptions.push(addFileToScope);
 
-	let removeFileCommand = vscode.commands.registerCommand('revspec.scope.removeFile', (sf: ScopeFile) => {
+	let removeFileCommand = vscode.commands.registerCommand('revspec.scope.removeFile', (sf: ScopeItem) => {
 		scopeProvider.removeItemFromScope(sf);
 	});
 	context.subscriptions.push(removeFileCommand);
@@ -160,10 +160,10 @@ export function updateStatusBarItemProgress() {
 			sp = `${Math.ceil(((seenLines / lines) * 100))}%`;
 		}
 	}
-	let reducer = (accumulator: number, currentValue: ScopeFile) => accumulator + currentValue.getSeenStats().lines;
+	let reducer = (accumulator: number, currentValue: ScopeItem) => accumulator + currentValue.getSeenStats().lines;
 	let lines = scopeProvider.scope.reduce(reducer, 0);
 	if (lines !== 0) {
-		reducer = (accumulator: number, currentValue: ScopeFile) => accumulator + currentValue.getSeenStats().seenLines;
+		reducer = (accumulator: number, currentValue: ScopeItem) => accumulator + currentValue.getSeenStats().seenLines;
 		let seenLines = scopeProvider.scope.reduce(reducer, 0);
 		ap = Math.ceil(((seenLines / lines) * 100));
 	}
@@ -183,10 +183,10 @@ export function updateStatusBarItemAccepted() {
 			sp = `${Math.ceil(((acceptedLines / lines) * 100))}%`;
 		}
 	}
-	let reducer = (accumulator: number, currentValue: ScopeFile) => accumulator + currentValue.getAcceptedStats().lines;
+	let reducer = (accumulator: number, currentValue: ScopeItem) => accumulator + currentValue.getAcceptedStats().lines;
 	let lines = scopeProvider.scope.reduce(reducer, 0);
 	if (lines !== 0) {
-		reducer = (accumulator: number, currentValue: ScopeFile) => accumulator + currentValue.getAcceptedStats().acceptedLines;
+		reducer = (accumulator: number, currentValue: ScopeItem) => accumulator + currentValue.getAcceptedStats().acceptedLines;
 		let acceptedLines = scopeProvider.scope.reduce(reducer, 0);
 		ap = Math.ceil(((acceptedLines / lines) * 100));
 	}
