@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+
 import { updateStatusBarItemProgress, updateStatusBarItemAccepted, Finding, scopeProvider } from './extension';
 
 const seenDecorationType = vscode.window.createTextEditorDecorationType({
@@ -159,9 +160,11 @@ export class ScopeProvider implements vscode.TreeDataProvider<ScopeFile> {
             return 0;
         });
         // Sync persistent storage
+        // Iterate all scopeFiles in memory
         this.scope.forEach((sf) => {
             let uri = sf.resourceUri.toString();
             let x = this.scopeStore.get(uri);
+            // If the in-memory scopeFile is not persistent yet, create it
             if (x === undefined) {
                 let scopeFiles: string[] = this.scopeStore.get("__scopeFiles__", []);
                 scopeFiles.push(uri);
@@ -217,6 +220,13 @@ export class ScopeProvider implements vscode.TreeDataProvider<ScopeFile> {
         if (index > -1) {
             this.scope.splice(index);
         }
+        this.scopeStore.update(element.resourceUri.toString(), null);
+        let scopeFiles: string[] = this.scopeStore.get("__scopeFiles__", []);
+        var i = scopeFiles.indexOf(element.resourceUri.toString());
+        if (i > -1) {
+            scopeFiles.splice(i, 1);
+        }
+        this.scopeStore.update("__scopeFiles__", scopeFiles);
         this.refresh();
     }
 
@@ -279,6 +289,7 @@ export class ScopeProvider implements vscode.TreeDataProvider<ScopeFile> {
         this.scope.forEach((sf) => {
             sf.deleteFindingByID(id);
         });
+        this.updateDecorations();
     }
 
     updateDecorations() {
