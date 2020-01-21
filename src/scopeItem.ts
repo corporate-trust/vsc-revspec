@@ -40,6 +40,9 @@ export class ScopeItem extends vscode.TreeItem {
             title: '',
             arguments: [resourceUri]
         };
+        if (seen === undefined) {
+            seen = [];
+        }
     }
 
     refreshSeen() {

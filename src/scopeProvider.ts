@@ -22,9 +22,8 @@ const findingDecoratorType = vscode.window.createTextEditorDecorationType({
 function deserializeRange(r: any) {
     if (r instanceof Array) {
         return new vscode.Range(new vscode.Position(r[0].line, r[0].character), new vscode.Position(r[1].line, r[1].character));
-    } else if (r instanceof Object) {
-        return new vscode.Range(new vscode.Position(r.start.line, r.start.character), new vscode.Position(r.end.line, r.end.character));
     }
+    return new vscode.Range(new vscode.Position(r.start.line, r.start.character), new vscode.Position(r.end.line, r.end.character));
 }
 
 function deserializeFinding(o: Finding) {
@@ -32,12 +31,16 @@ function deserializeFinding(o: Finding) {
     return new Finding(o.title, o.body, o.severity, o.likelihood, o.author, r, o.id);
 }
 
+function notUndefined(x: any) {
+    return (x !== undefined);
+}
+
 function deserializeScopeItem(o: ScopeItem) {
     let uri = vscode.Uri.parse(o.resourceUri.path);
     let textDoc = getTextDocumentByUri(uri);
-    let seen = o.seen.map(deserializeRange);
-    let accepted = o.accepted.map(deserializeRange);
-    let findings = o.findings.map(deserializeFinding);
+    let seen = o.seen.map(deserializeRange).filter(notUndefined);
+    let accepted = o.accepted.map(deserializeRange).filter(notUndefined);
+    let findings = o.findings.map(deserializeFinding).filter(notUndefined);
     return new ScopeItem(uri, 0, textDoc, seen, accepted, findings);
 }
 

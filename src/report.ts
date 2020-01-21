@@ -37,15 +37,17 @@ export class ReportProvider implements vscode.TextDocumentContentProvider {
                 return 0;
             });
             sf.findings.forEach((f: Finding) => {
-                text += "### " + f.id + " - " + f.title + "\n";
-                text += `* ${vscode.workspace.asRelativePath(sf.document.uri)} (l.${f.range.start.line}-${f.range.end.line})\n`;
-                text += "* Severity: " + f.severity + "\n";
-                text += "* Likelihood: " + f.likelihood + "\n";
-                text += `* Reviewer: ${f.author}\n\n`;
-                text += f.body + "\n\n";
-                text += "```\n";
-                text += sf.document.getText(f.range);
-                text += "\n```\n\n";
+                if (sf.document !== undefined) {
+                    text += "### " + f.id + " - " + f.title + "\n";
+                    text += `* ${vscode.workspace.asRelativePath(sf.document.uri)} (l.${f.range.start.line}-${f.range.end.line})\n`;
+                    text += "* Severity: " + f.severity + "\n";
+                    text += "* Likelihood: " + f.likelihood + "\n";
+                    text += `* Reviewer: ${f.author}\n\n`;
+                    text += f.body + "\n\n";
+                    text += "```\n";
+                    text += sf.document.getText(f.range);
+                    text += "\n```\n\n";
+                }
             });
         });
         return text;
