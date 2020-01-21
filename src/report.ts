@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { ScopeItem } from './scopeProvider';
-import { scopeProvider, Finding } from './extension';
+import { ScopeItem, Finding } from './scopeItem';
+import { scopeProvider } from './extension';
 
 export class ReportProvider implements vscode.TextDocumentContentProvider {
 // TODO: overall stats
