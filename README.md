@@ -37,7 +37,6 @@ This open source VSCode extension is designed to support source code reviews. It
 
 * The text fields in the findings dialog are not really suited for longer text.
 * It's not possible to modify a finding after its creation.
-* The review session is non-permanent
 
 ## Next sprint
 > This may take until June 2020.
