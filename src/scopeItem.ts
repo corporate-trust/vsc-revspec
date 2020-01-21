@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { getTextDocumentByUri } from './scopeProvider';
-import { property } from 'class-converter';
 import { EFAULT } from 'constants';
 
 export var findingId = 0;
