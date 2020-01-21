@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
-
-import { updateStatusBarItemProgress, updateStatusBarItemAccepted, Finding, scopeProvider } from './extension';
+import { updateStatusBarItemAccepted, updateStatusBarItemProgress } from './extension';
+import { Finding, ScopeItem, setFindingId } from './scopeItem';
+import { findingId } from './scopeItem';
 
 const seenDecorationType = vscode.window.createTextEditorDecorationType({
     overviewRulerColor: {id: 'revspec.scope.seen'},
@@ -18,108 +19,39 @@ const findingDecoratorType = vscode.window.createTextEditorDecorationType({
     borderStyle: "none none solid none"
 });
 
-let sumReducer = (accumulator: number, currentValue: vscode.Range) => accumulator + (currentValue.end.line - currentValue.start.line);
-let findingsReducer = (accumulator: number, currentValue: ScopeItem) => accumulator + currentValue.findings.length;
-
-export class ScopeItem extends vscode.TreeItem {
-    constructor(
-        public readonly resourceUri: vscode.Uri,
-        public readonly collapsibleState: vscode.TreeItemCollapsibleState,
-        public document: vscode.TextDocument,
-        public seen: vscode.Range[],
-        public accepted: vscode.Range[],
-        public findings: Finding[]
-    ) {
-        super(resourceUri, collapsibleState);
-        this.command = {
-            command: 'vscode.open',
-            title: '',
-            arguments: [resourceUri]
-        };
-    }
-
-    refreshSeen() {
-        if (this.seen) {
-            this.seen.sort((a: vscode.Range, b: vscode.Range) => {
-                return a.start.compareTo(b.start);
-            });
-        }
-    }
-
-    refreshAccepted() {
-        if (this.accepted) {
-            this.accepted.sort((a: vscode.Range, b: vscode.Range) => {
-                return a.start.compareTo(b.start);
-            });
-        }
-    }
-
-    getSeenStats() {
-        return {
-            lines: this.document.lineCount,
-            seenLines: this.seen.reduce(sumReducer, 0)
-        };
-    }
-
-    getAcceptedStats() {
-        return {
-            lines: this.document.lineCount,
-            acceptedLines: this.accepted.reduce(sumReducer, 0)
-        };
-    }
-    
-    // Add a range to the reviewed scope
-    addSeenRange(new_r: vscode.Range) {
-        this.seen.push(new_r);
-        this.refreshSeen();
-        for (var i = 0; i < this.seen.length; i++) {
-            try {
-                while (this.seen[i].end.isAfterOrEqual(this.seen[i+1].start)) {
-                    this.seen[i] = this.seen[i].union(this.seen[i+1]);
-                    this.seen.splice(i+1,1);
-                }
-            } catch(e) {
-                return;
-            }
-        }
-    }
-
-    addAcceptedRange(new_r: vscode.Range) {
-        this.accepted.push(new_r);
-        this.refreshAccepted();
-        for (var i = 0; i < this.accepted.length; i++) {
-            try {
-                while (this.accepted[i].end.isAfterOrEqual(this.accepted[i+1].start)) {
-                    this.accepted[i] = this.accepted[i].union(this.accepted[i+1]);
-                    this.accepted.splice(i+1,1);
-                }
-            } catch(e) {
-                return;
-            }
-        }
-    }
-
-    addFinding(f: Finding) {
-        this.accepted = this.accepted.filter(a => 
-            (a.intersection(f.range) === undefined) && (!(a.contains(f.range)))
-        );
-        this.findings.push(f);
-        scopeProvider.updateDecorations();
-    }
-
-    getFindingByID(id: number) {
-        let f =  this.findings.filter(f => f.id === id);
-        if (f.length > 0) {
-            return f[0];
-        } else {
-            return null;
-        }
-    }
-
-    deleteFindingByID(id: number) {
-        this.findings = this.findings.filter(f => f.id !== id);
+function deserializeRange(r: any) {
+    if (r instanceof Array) {
+        return new vscode.Range(new vscode.Position(r[0].line, r[0].character), new vscode.Position(r[1].line, r[1].character));
+    } else if (r instanceof Object) {
+        return new vscode.Range(new vscode.Position(r.start.line, r.start.character), new vscode.Position(r.end.line, r.end.character));
     }
 }
+
+function deserializeFinding(o: Finding) {
+    let r = deserializeRange(o.range);
+    return new Finding(o.title, o.body, o.severity, o.likelihood, o.author, r, o.id);
+}
+
+function deserializeScopeItem(o: ScopeItem) {
+    let uri = vscode.Uri.parse(o.resourceUri.path);
+    let textDoc = getTextDocumentByUri(uri);
+    let seen = o.seen.map(deserializeRange);
+    let accepted = o.accepted.map(deserializeRange);
+    let findings = o.findings.map(deserializeFinding);
+    return new ScopeItem(uri, 0, textDoc, seen, accepted, findings);
+}
+
+export function getTextDocumentByUri(uri: vscode.Uri) {
+    let x = vscode.workspace.textDocuments.filter(x => {
+        return x.uri.toString() === uri.toString();
+    });
+    if (x.length > 0) {
+        return x[0];
+    }
+    return undefined;
+}
+
+let findingsReducer = (accumulator: number, currentValue: ScopeItem) => accumulator + currentValue.findings.length;
 
 export class ScopeProvider implements vscode.TreeDataProvider<ScopeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<ScopeItem | undefined> = new vscode.EventEmitter<ScopeItem | undefined>();
@@ -137,12 +69,12 @@ export class ScopeProvider implements vscode.TreeDataProvider<ScopeItem> {
 
     // Restore state of extension
     init(): void {
+        setFindingId(this.scopeStore.get("__findingId__", 1));
         let scopeFiles: string[] = this.scopeStore.get("__scopeFiles__", []);
         scopeFiles.forEach((uri) => {
             let sf: ScopeItem|undefined = this.scopeStore.get(uri);
             if (sf !== undefined) {
-                var h = new ScopeItem(sf.resourceUri, sf.collapsibleState, 
-                    sf.document, sf.seen, sf.accepted, sf.findings);
+                var h = deserializeScopeItem(sf);
                 this.scope.push(h);
             }
         });
@@ -160,6 +92,7 @@ export class ScopeProvider implements vscode.TreeDataProvider<ScopeItem> {
             return 0;
         });
         // Sync persistent storage
+        this.scopeStore.update("__findingId__", findingId);
         // Iterate all scopeFiles in memory
         this.scope.forEach((sf) => {
             let uri = sf.resourceUri.toString();
