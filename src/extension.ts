@@ -4,31 +4,18 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { ScopeProvider, ScopeItem } from './scopeProvider';
+import { ScopeProvider } from './scopeProvider';
+import { ScopeItem, Finding } from './scopeItem';
 import { ReportProvider } from './report';
+import { findingId } from './scopeItem';
 import { REPL_MODE_SLOPPY } from 'repl';
 
-let markerId = 0;
 let currentSeenProgress: vscode.StatusBarItem;
 let currentAcceptedProgress: vscode.StatusBarItem;
 export let reviewer: string;
 let findingsHoverProvider: vscode.HoverProvider;
 
 export let scopeProvider: ScopeProvider;
-
-export class Finding {
-	id: number;
-	constructor(
-		public title: string | undefined,
-		public body: string | undefined,
-		public severity: string | undefined,
-		public likelihood: string | undefined,
-		public author: string | undefined,
-		public range: vscode.Range
-	) {
-		this.id = ++markerId;
-	}
-}
 
 async function setup_session() {
 	vscode.window.showInformationMessage('Setup review session!');
@@ -269,7 +256,7 @@ export async function newFindingDialog(editor: vscode.TextDocument, range: vscod
 			return (Number.isInteger(Number(value))) ? null : 'Numbers only!';
 		}
 	});
-	let f = new Finding(title, description, severity, likelihood, reviewer, range);
+	let f = new Finding(title, description, severity, likelihood, reviewer, range, findingId);
 	return f;
 }
 
