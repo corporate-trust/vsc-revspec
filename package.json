@@ -44,7 +44,7 @@
 		"commands": [
 			{
 				"command": "revspec.setupsession",
-				"title": "Revspec: Setup review session"
+				"title": "Revspec: Setup/Resume review session"
 			},
 			{
 				"command": "revspec.scope.addFile",
@@ -176,7 +176,11 @@
 		"vscode": "^1.1.28"
 	},
 	"dependencies": {
+		"class-converter": "0.0.6",
+		"install": "^0.13.0",
 		"mkdirp": "^0.5.1",
-		"rimraf": "^3.0.0"
+		"npm": "^6.13.6",
+		"rimraf": "^3.0.0",
+		"serializr": "^1.5.4"
 	}
 }
