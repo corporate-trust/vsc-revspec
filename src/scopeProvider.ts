@@ -72,7 +72,7 @@ export class ScopeProvider implements vscode.TreeDataProvider<ScopeItem> {
 
     // Restore state of extension
     init(): void {
-        setFindingId(this.scopeStore.get("__findingId__", 1));
+        setFindingId(this.scopeStore.get("__findingId__", 0));
         let scopeFiles: string[] = this.scopeStore.get("__scopeFiles__", []);
         scopeFiles.forEach((uri) => {
             let sf: ScopeItem|undefined = this.scopeStore.get(uri);

@@ -5,7 +5,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { ScopeProvider } from './scopeProvider';
-import { ScopeItem, Finding } from './scopeItem';
+import { ScopeItem, Finding, setFindingId } from './scopeItem';
 import { ReportProvider } from './report';
 import { findingId } from './scopeItem';
 import { REPL_MODE_SLOPPY } from 'repl';
@@ -256,6 +256,7 @@ export async function newFindingDialog(editor: vscode.TextDocument, range: vscod
 			return (Number.isInteger(Number(value))) ? null : 'Numbers only!';
 		}
 	});
+	setFindingId(findingId+1);
 	let f = new Finding(title, description, severity, likelihood, reviewer, range, findingId);
 	return f;
 }
